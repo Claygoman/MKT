@@ -1,112 +1,19 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <syslog.h>
-#include <fcntl.h>
-
-//обработчик сигнала SIGUSR1
-void sigusr1(){
-    FILE *file;
-    file = fopen("/home/userx/my.log", "w+");
-    fputc('0', file);
-    fclose(file);
-    syslog (LOG_NOTICE, "Файл создан!");
-}
-//обработчик сигнала SIGUP
-void sigup(){
-    FILE *file;
-    int worker;
-    file = fopen("/home/userx/my.log", "r+");
-    if (file){
-        fscanf(file, "%d", &worker);
-        syslog (LOG_NOTICE, "В файле было %d", worker);
-        rewind(file);
-        worker++;
-        fprintf(file, "%d", worker);
-        syslog (LOG_NOTICE, "В файле стало %d", worker);
-        fclose(file);
-    }
-    else{
-        syslog (LOG_NOTICE, "Файл не существует!");
-    }
-}
-//обработчик сигнала SIGTERM
-void sigterm(){
-    remove("/home/userx/my.log");
-    syslog (LOG_NOTICE, "Демон ликвидирован!");
-    closelog();
-    exit(EXIT_SUCCESS);
-}
-static void skeleton_daemon()
-{
-    pid_t pid;
-
-    //создаю дочерний процесс
-    pid = fork();
-
-    //при ошибке завершаю программу
-    /* An error occurred */
-    if (pid < 0)
-        exit(EXIT_FAILURE);
-
-    //ликвидируем родителя
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
-
-    //делаем дочерний процесс лидером новой сессии
-    if (setsid() < 0)
-        exit(EXIT_FAILURE);
-
-    //обработка сигналов
-    signal(SIGCHLD, SIG_IGN);
-    signal(SIGHUP, sigup);
-    signal(SIGTERM, sigterm);
-    signal(SIGUSR1, sigusr1);
-    signal(SIGKILL, SIG_DFL);
-
-    //создаю дочерний процесс от прошлого, который является лидером другой сессии
-    pid = fork();
-
-    //при ошибке завершаю программу
-    if (pid < 0)
-        exit(EXIT_FAILURE);
-
-    //ликвидируем первый дочерний процесс
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
-
-    //задаем все биты прав программе
-    umask(0);
-
-    //меняем рабочую директорию на корневую
-    chdir("/");
-
-    //закрываем все дескрипторы доступные для программы
-    int x;
-    for (x = sysconf(_SC_OPEN_MAX); x>=0; x--)
-    {
-        close (x);
-    }
-
-    //открываем стандартные потоки ввода/вывода для программы в /dev/null для работы функций стандартных библиотек
-    dup(open("/dev/null", O_RDWR));
-
-    //открываем лог для созданного демона
-    openlog ("MyDaemon", LOG_PID, LOG_DAEMON);
-
-//    setpgrp();
-}
-
+#include <math.h>
+ 
 int main()
 {
-    skeleton_daemon();
-    syslog (LOG_NOTICE, "MyDaemon запустился!");
-    while (1){}
-    syslog (LOG_NOTICE, "MyDaemon ликвидирован!");
-    closelog();
-
-    return EXIT_SUCCESS;
+    float a,b,angle,area;
+    
+    printf("First side(a) - ");
+    scanf("%f",&a);
+    
+    printf("Second side(b) - ");
+    scanf("%f",&b);
+    
+    printf("Angle between sides of triangle - ");
+    scanf("%f",&angle);
+    
+    area = 0.5 * a * b * sinf(angle * (M_PI / 180));
+    printf("Area of triangle - %f",area);   
 }
